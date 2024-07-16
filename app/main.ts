@@ -41,16 +41,25 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
   connection.on("data", (buffer) => {
     const commands = parseRESP(buffer.toString());
 
-    if (commands[0] === "PING") {
-      if (commands.length === 1) {
-        connection.write("+PONG\r\n");
-      } else {
+    switch (commands[0]) {
+      case "PING":
+        if (commands.length === 1) {
+          connection.write("+PONG\r\n");
+        } else {
+          if (commands.length > 2) {
+            connection.write("-ERR wrong number of arguments for command\r\n");
+          }
+          connection.write(`+${commands[1]}\r\n`);
+        }
+        break;
+      case "ECHO":
+        if (commands.length != 2) {
+          connection.write("-ERR wrong number of arguments for command\r\n");
+        }
         connection.write(`+${commands[1]}\r\n`);
-      }
-    }
-
-    if (commands[0] === "ECHO") {
-      connection.write(`+${commands[1]}\r\n`);
+        break;
+      default:
+        connection.write("-ERR unknown command\r\n");
     }
   });
 
