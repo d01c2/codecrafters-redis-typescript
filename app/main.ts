@@ -1,5 +1,7 @@
 import * as net from "net";
 
+const values = new Map<string, string>();
+
 function parseRESP(input: string): string[] {
   const lines = input.split("\r\n");
   let result: string[] = [];
@@ -53,10 +55,26 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
         }
         break;
       case "ECHO":
-        if (commands.length != 2) {
+        if (commands.length !== 2) {
           connection.write("-ERR wrong number of arguments for command\r\n");
         }
         connection.write(`+${commands[1]}\r\n`);
+        break;
+      case "SET":
+        if (commands.length < 3) {
+          connection.write("-ERR wrong number of arguments for command\r\n");
+        }
+        values.set(commands[1], commands[2]);
+        connection.write("+OK\r\n");
+        break;
+      case "GET":
+        if (commands.length !== 2) {
+          connection.write("-ERR wrong number of arguments for command\r\n");
+        }
+        const value = values.get(commands[1]);
+        connection.write(
+          value ? `\$${value.length}\r\n${value}\r\n` : "$-1\r\n"
+        );
         break;
       default:
         connection.write("-ERR unknown command\r\n");
