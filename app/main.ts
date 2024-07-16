@@ -48,6 +48,10 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
         connection.write(`+${commands[1]}\r\n`);
       }
     }
+
+    if (commands[0] === "ECHO") {
+      connection.write(`+${commands[1]}\r\n`);
+    }
   });
 
   connection.on("end", () => {
