@@ -43,7 +43,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
   connection.on("data", (buffer) => {
     const commands = parseRESP(buffer.toString());
 
-    switch (commands[0]) {
+    switch (commands[0].toUpperCase()) {
       case "PING":
         if (commands.length === 1) {
           connection.write("+PONG\r\n");
@@ -65,7 +65,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
           connection.write("-ERR wrong number of arguments for command\r\n");
         }
         values.set(commands[1], commands[2]);
-        if (commands[3] === "px") {
+        if (commands[3].toUpperCase() === "PX") {
           setTimeout(() => {
             values.delete(commands[1]);
           }, parseInt(commands[4]));
