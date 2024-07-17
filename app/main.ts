@@ -8,12 +8,12 @@ function parseRESP(input: string): string[] {
   let index = 0;
 
   if (lines[index].startsWith("*")) {
-    const arraySize = parseInt(lines[index].substring(1), 10);
+    const arraySize = +lines[index].substring(1);
     index++;
 
     while (result.length < arraySize && index < lines.length) {
       if (lines[index].startsWith("$")) {
-        const strLength = parseInt(lines[index].substring(1), 10);
+        const strLength = +lines[index].substring(1);
         index++;
 
         if (lines[index].length === strLength) {
@@ -65,10 +65,10 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
           connection.write("-ERR wrong number of arguments for command\r\n");
         }
         values.set(commands[1], commands[2]);
-        if (commands[3].toUpperCase() === "PX") {
+        if (!!commands[3] && commands[3].toUpperCase() === "PX") {
           setTimeout(() => {
             values.delete(commands[1]);
-          }, parseInt(commands[4]));
+          }, +commands[4]);
         }
         connection.write("+OK\r\n");
         break;
