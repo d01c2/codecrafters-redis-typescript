@@ -2,6 +2,25 @@ import * as net from "net";
 
 const values = new Map<string, string>();
 
+const parseArgs = () => {
+  const args = process.argv.slice(2);
+  const argObj = new Map<string, string>();
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i].startsWith("--")) {
+      const key = args[i].substring(2);
+      const value = args[i + 1];
+      argObj.set(key, value);
+      i++;
+    }
+  }
+
+  return argObj;
+};
+
+const args = parseArgs();
+const port = +(args.get("port") ?? 6379);
+
 function parseRESP(input: string): string[] {
   const lines = input.split("\r\n");
   let result: string[] = [];
@@ -91,4 +110,4 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
   });
 });
 
-server.listen(6379, "127.0.0.1");
+server.listen(port, "127.0.0.1");
