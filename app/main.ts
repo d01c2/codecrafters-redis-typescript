@@ -26,7 +26,7 @@ const parseArgs = () => {
 const args = parseArgs();
 const cfg: ServerConfig = {
   port: +(args.get("port") ?? 6379),
-  role: "master",
+  role: args.has("replicaof") ? "slave" : "master",
 };
 
 function parseRESP(input: string): string[] {
