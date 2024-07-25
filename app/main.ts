@@ -1,5 +1,10 @@
 import * as net from "net";
 
+type role = "master" | "slave" | "sentinel";
+type ServerConfig = {
+  port: number;
+  role: role;
+};
 const values = new Map<string, string>();
 
 const parseArgs = () => {
@@ -19,7 +24,10 @@ const parseArgs = () => {
 };
 
 const args = parseArgs();
-const port = +(args.get("port") ?? 6379);
+const cfg: ServerConfig = {
+  port: +(args.get("port") ?? 6379),
+  role: "master",
+};
 
 function parseRESP(input: string): string[] {
   const lines = input.split("\r\n");
@@ -100,6 +108,22 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
           value ? `\$${value.length}\r\n${value}\r\n` : "$-1\r\n"
         );
         break;
+      case "INFO":
+        if (commands.length < 2) {
+          connection.write("-ERR wrong number of arguments for command\r\n");
+        }
+        for (const section of commands.slice(1)) {
+          switch (section) {
+            case "replication":
+              const response = `role:${cfg.role}`;
+              const bulkString = `$${response.length}\r\n${response}\r\n`;
+              connection.write(bulkString);
+              break;
+            default:
+              connection.write("-ERR unknown section\r\n");
+          }
+        }
+        break;
       default:
         connection.write("-ERR unknown command\r\n");
     }
@@ -110,4 +134,4 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
   });
 });
 
-server.listen(port, "127.0.0.1");
+server.listen(cfg.port, "127.0.0.1");
