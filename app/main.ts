@@ -4,8 +4,20 @@ type role = "master" | "slave" | "sentinel";
 type ServerConfig = {
   port: number;
   role: role;
+  master_replid: string;
+  master_repl_offset: number;
 };
 const values = new Map<string, string>();
+
+const randomString = () => {
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < 40; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+};
 
 const parseArgs = () => {
   const args = process.argv.slice(2);
@@ -27,6 +39,8 @@ const args = parseArgs();
 const cfg: ServerConfig = {
   port: +(args.get("port") ?? 6379),
   role: args.has("replicaof") ? "slave" : "master",
+  master_replid: randomString(),
+  master_repl_offset: 0,
 };
 
 function parseRESP(input: string): string[] {
