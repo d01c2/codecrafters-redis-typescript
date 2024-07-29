@@ -129,7 +129,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
         for (const section of commands.slice(1)) {
           switch (section) {
             case "replication":
-              const response = `role:${cfg.role}`;
+              const response = `role:${cfg.role}\r\nmaster_replid:${cfg.master_replid}\r\nmaster_repl_offset:${cfg.master_repl_offset}`;
               const bulkString = `$${response.length}\r\n${response}\r\n`;
               connection.write(bulkString);
               break;
