@@ -148,6 +148,14 @@ const commandHandlers: Map<
 const server: net.Server = net.createServer((connection: net.Socket) => {
   console.log("Client Connected");
 
+  if (cfg.role == "slave") {
+    const socket = new net.Socket();
+    const [masterHost, masterPort] = args.get("replicaof")!.split(" ");
+    socket.connect(+masterPort, masterHost, () => {
+      socket.write("*1\r\n$4\r\nPING\r\n");
+    });
+  }
+
   connection.on("data", (buffer) => {
     const commands = parseRESP(buffer.toString());
     const command = commands[0].toUpperCase();
