@@ -49,6 +49,7 @@ if (cfg.role == "slave") {
     socket.write("*1\r\n$4\r\nPING\r\n");
   });
   var replconfCounter = 2;
+  // TODO: Bulkstring Builder
   socket.on("data", async (buffer) => {
     if (buffer.toString() === "+PONG\r\n") {
       await socket.write(
