@@ -48,14 +48,21 @@ if (cfg.role == "slave") {
   socket.connect(+masterPort, masterHost, () => {
     socket.write("*1\r\n$4\r\nPING\r\n");
   });
+  var replconfCounter = 2;
   socket.on("data", async (buffer) => {
-    if (buffer.toString() == "+PONG\r\n") {
+    if (buffer.toString() === "+PONG\r\n") {
       await socket.write(
         `*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n$4\r\n${cfg.port}\r\n`
       );
       await socket.write(
         "*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n"
       );
+    }
+    if (buffer.toString() === "+OK\r\n") {
+      replconfCounter--;
+      if (replconfCounter === 0) {
+        await socket.write("*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n");
+      }
     }
   });
 }
@@ -155,6 +162,10 @@ const replconfHandler = (commands: string[], connection: net.Socket): void => {
   connection.write("+OK\r\n");
 };
 
+const psyncHandler = (commands: string[], connection: net.Socket): void => {
+  connection.write(`+FULLRESYNC ${cfg.master_replid} 0\r\n`);
+};
+
 const commandHandlers: Map<
   string,
   (commands: string[], connection: net.Socket) => void
@@ -165,6 +176,7 @@ const commandHandlers: Map<
   ["GET", getHandler],
   ["INFO", infoHandler],
   ["REPLCONF", replconfHandler],
+  ["PSYNC", psyncHandler],
 ]);
 
 // TODO: Folder Structuring
