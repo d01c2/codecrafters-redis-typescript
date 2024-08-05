@@ -42,6 +42,14 @@ const cfg: ServerConfig = {
   master_repl_offset: 0,
 };
 
+if (cfg.role == "slave") {
+  const socket = new net.Socket();
+  const [masterHost, masterPort] = args.get("replicaof")!.split(" ");
+  socket.connect(+masterPort, masterHost, () => {
+    socket.write("*1\r\n$4\r\nPING\r\n");
+  });
+}
+
 const parseRESP = (input: string): string[] => {
   const lines = input.split("\r\n");
   let result = [];
@@ -147,14 +155,6 @@ const commandHandlers: Map<
 // TODO: Folder Structuring
 const server: net.Server = net.createServer((connection: net.Socket) => {
   console.log("Client Connected");
-
-  if (cfg.role == "slave") {
-    const socket = new net.Socket();
-    const [masterHost, masterPort] = args.get("replicaof")!.split(" ");
-    socket.connect(+masterPort, masterHost, () => {
-      socket.write("*1\r\n$4\r\nPING\r\n");
-    });
-  }
 
   connection.on("data", (buffer) => {
     const commands = parseRESP(buffer.toString());
